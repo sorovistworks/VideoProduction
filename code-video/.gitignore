@@ -1,0 +1,13 @@
+node_modules/
+.venv/
+.env
+projects/**/out/
+projects/**/audio/mix*.wav
+refs/**
+!refs/**/
+!refs/README.md
+!refs/*/STYLE.md
+__pycache__/
+projects/*/docs/data/raw/
+projects/*/audio/takes/*.wav
+projects/**/audio/voice*.wav

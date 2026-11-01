@@ -62,6 +62,9 @@ Every video here is rendered from code. A model writes the scene; this machine d
 - Music ≥ 15 dB under every spoken word, ducked. A whoosh into every move, a hit on every landing, a click on every UI action, cues on `beats.json` / `timing.json`.
 - Master −14 LUFS, ≤ −1 dBTP.
 
+## Delivery
+- Finals are copied out of this folder to the repo root's `assets/` (see the root `CLAUDE.md`): `../assets/videos/<name>/` for `final_*.mp4` and `captions.srt`, `../assets/images/<name>/` for the thumbnail and approved stills, `../assets/audio/<name>/` for `mix.wav` and the chosen voice take.
+
 ## Brand and facts
 - Real product UI and official logo files only: move, scale, fade, blur or mask them; never redraw, never glow over them.
 - Every factual claim shows its source on screen and goes in `docs/sources.md`. Amounts illustrative. Spec ads say "Spec ad · not affiliated with X".

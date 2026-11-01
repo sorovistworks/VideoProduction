@@ -54,4 +54,4 @@ Write `audio/score.py` on `tools/sound.py` (see the example in its docstring): o
 - `node tools/review.mjs projects/<name>/out/final_1920x1080.mp4` and read `wave.png` against the shot times: every hit on its frame.
 - If there is narration: `uv run tools/srt.py projects/<name>/docs/timing.json -o projects/<name>/out/captions.srt`.
 - Thumbnail if wanted: `thumb.html` (≤ 3 words, readable at 320 px wide, same look as the film) rendered at 1280×720 (CLAUDE.md).
-- Deliver `out/final_*.mp4` (+ captions, thumbnail). Say what you would improve next. Nothing is published from here; disclose synthetic content where a platform asks.
+- Deliver into the repo root's `assets/` (root `CLAUDE.md`), creating the folders: `out/final_*.mp4` + `captions.srt` → `../assets/videos/<name>/`, thumbnail + approved stills → `../assets/images/<name>/`, `audio/mix.wav` + chosen voice take → `../assets/audio/<name>/`. Give the user every delivered path. Say what you would improve next. Nothing is published from here; disclose synthetic content where a platform asks.

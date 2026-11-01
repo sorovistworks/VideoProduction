@@ -1,0 +1,5 @@
+# Final media lives in assets/ but is too large for git; keep the folder layout and prompt text.
+assets/**
+!assets/**/
+!assets/README.md
+!assets/prompts/**/*.md

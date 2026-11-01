@@ -1,0 +1,121 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>starter-3d</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #05060a; overflow: hidden; }
+  canvas { display: block; width: 100vw; height: 100vh; }
+  /* DOM type over WebGL: moved only from seek(t), never with CSS transitions. */
+  #head { position: absolute; left: 7vw; top: 9vh; margin: 0; color: #fff; opacity: 0;
+    font: 800 min(9vw, 9vh)/0.95 "Inter", "Segoe UI", system-ui, sans-serif; letter-spacing: -0.02em; }
+  #head b { color: #fbd914; font-weight: 800; }
+</style>
+<script type="importmap">
+  { "imports": { "three": "/node_modules/three/build/three.module.js", "three/addons/": "/node_modules/three/examples/jsm/" } }
+</script>
+</head>
+<body>
+<canvas id="c"></canvas>
+<h1 id="head">Built <b>in code.</b></h1>
+<script type="module">
+import * as THREE from 'three';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { spring, track, lerp, clamp, rng } from '/engine/motion.js';
+
+window.DURATION = 6;
+const ACCENT = 0xfbd914;
+const W = innerWidth, H = innerHeight, portrait = H > W;
+
+// preserveDrawingBuffer so the capture always sees the finished frame.
+const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('c'), antialias: true, preserveDrawingBuffer: true });
+renderer.setPixelRatio(1);
+renderer.setSize(W, H, false);
+renderer.toneMapping = THREE.NeutralToneMapping; // keeps brand colours true; ACES washes yellows out
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x05060a);
+scene.fog = new THREE.Fog(0x05060a, 20, 48);
+scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), 0.04).texture;
+const camera = new THREE.PerspectiveCamera(portrait ? 52 : 35, W / H, 0.1, 100);
+
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(200, 200), new THREE.MeshStandardMaterial({ color: 0x07090f, roughness: 0.9 }));
+floor.rotation.x = -Math.PI / 2;
+floor.receiveShadow = true;
+scene.add(floor);
+const grid = new THREE.GridHelper(60, 60, 0x1d2a44, 0x10172a);
+grid.position.y = 0.002;
+scene.add(grid);
+const key = new THREE.DirectionalLight(0xffffff, 1.6);
+key.position.set(7, 12, 4);
+key.castShadow = true;
+key.shadow.mapSize.set(2048, 2048);
+Object.assign(key.shadow.camera, { left: -10, right: 10, top: 10, bottom: -10 });
+key.shadow.bias = -0.0005;
+scene.add(key);
+
+// Seeded maquette: low blocks rise out of the floor on a stagger, leaving a plaza for the hero.
+const r = rng(42), blocks = [];
+const white = new THREE.MeshStandardMaterial({ color: 0xe9e6df, roughness: 0.55 });
+for (let i = 0; i < 36; i++) {
+  const w = 0.6 + r() * 1.3, d = 0.6 + r() * 1.3, h = 0.25 + r() * 1.1;
+  const x = ((i % 6) - 2.5) * 2.2 + (r() - 0.5) * 0.4, z = (Math.floor(i / 6) - 2.5) * 2.2 + (r() - 0.5) * 0.4;
+  if (Math.hypot(x, z) < 3.4) continue;
+  const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), white);
+  m.castShadow = m.receiveShadow = true;
+  m.userData = { x, z, h, at: 0.1 + i * 0.025 + r() * 0.05 };
+  scene.add(m);
+  blocks.push(m);
+}
+
+// Hero: the only colour in the frame. Falls and slams at LAND.
+const hero = new THREE.Mesh(new THREE.BoxGeometry(1.8, 1.8, 1.8), new THREE.MeshStandardMaterial({ color: ACCENT, roughness: 0.35 }));
+hero.castShadow = true;
+scene.add(hero);
+const LAND = 1.6;
+const head = document.getElementById('head');
+
+window.seek = (t) => {
+  for (const b of blocks) {
+    const { x, z, h, at } = b.userData;
+    b.position.set(x, lerp(-h / 2 - 0.01, h / 2, spring(t - at, 260, 20)), z);
+  }
+
+  // Gravity fall that lands exactly on LAND, then squash and settle.
+  const fall = clamp((t - (LAND - 0.4)) / 0.4);
+  const squash = t >= LAND ? 0.32 * (1 - spring(t - LAND, 500, 14)) : 0;
+  hero.position.set(0, lerp(14, 0.9, fall * fall) - squash * 0.9, 0);
+  hero.scale.set(1 + squash * 0.5, 1 - squash, 1 + squash * 0.5);
+  hero.rotation.y = 0.6 + t * 0.15;
+
+  // Camera: heavy springs push in at the slam and again at 3.6 s; seeded shake decays after impact.
+  const far = portrait ? 1.3 : 1;
+  const rad = track(t, [[0, 26], [LAND, 16], [3.6, 11.5]], 60, 14) * far;
+  const hgt = track(t, [[0, 15], [LAND, 9], [3.6, 5.2]], 60, 14);
+  const ang = lerp(-0.7, 0.45, t / window.DURATION);
+  const kick = t >= LAND ? Math.max(0, 1 - (t - LAND) / 0.4) : 0;
+  const s = rng(Math.round(t * 240) + 1);
+  camera.position.set(Math.sin(ang) * rad + (s() - 0.5) * 0.5 * kick, hgt + (s() - 0.5) * 0.5 * kick, Math.cos(ang) * rad);
+  camera.lookAt(0, 0.8, 0);
+  renderer.render(scene, camera);
+
+  const p = spring(t - (LAND + 0.15), 220, 2 * Math.sqrt(220));
+  head.style.opacity = p;
+  head.style.transform = `translateY(${lerp(40, 0, p)}px)`;
+};
+
+const q = new URLSearchParams(location.search);
+if (!q.has('render')) {
+  const T = q.has('t') ? Number(q.get('t')) : null, t0 = performance.now();
+  const loop = () => {
+    window.seek(T ?? ((performance.now() - t0) / 1000) % window.DURATION);
+    if (T === null) requestAnimationFrame(loop);
+  };
+  document.fonts.ready.then(loop);
+}
+</script>
+</body>
+</html>

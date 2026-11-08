@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=1080, height=1920"/>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js"></script>
+<style>
+@font-face{font-family:Inter;font-weight:700;src:url(assets/fonts/inter-latin-700-normal.woff2) format("woff2")}
+@font-face{font-family:Inter;font-weight:800;src:url(assets/fonts/inter-latin-800-normal.woff2) format("woff2")}
+@font-face{font-family:Inter;font-weight:900;src:url(assets/fonts/inter-latin-900-normal.woff2) format("woff2")}
+:root{--accent:#F5B82E;--teal:#0E7C74;--ink:#fff;--dark:#141414}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;overflow:hidden;background:#000}
+#root{position:relative;width:1080px;height:1920px;overflow:hidden;font-family:Inter,sans-serif}
+.shot{position:absolute;inset:0;width:1080px;height:1920px;object-fit:cover}
+.layer{position:absolute;inset:0;pointer-events:none}
+.hl{color:var(--accent)}
+#hook{display:flex;flex-direction:column;align-items:center;padding-top:250px}
+.hook-line{font-weight:900;font-size:120px;line-height:1.02;color:#fff;letter-spacing:-0.02em;
+  -webkit-text-stroke:14px #000;paint-order:stroke fill;position:relative;isolation:isolate}
+.hook-line.big{font-size:132px}
+.ico{width:1em;height:1em;vertical-align:-0.12em;display:inline-block}
+.hook-line .ico{width:120px;height:120px;vertical-align:-14px}
+.chip .ico{width:62px;height:62px;margin-right:6px}
+.rline .ico{width:44px;height:44px;vertical-align:-8px}
+#finger .ico{width:84px;height:84px;vertical-align:-18px}
+.avatar .ico{width:80px;height:80px}
+.send .ico{width:52px;height:52px}
+.grain-label .ico{width:56px;height:56px;vertical-align:-8px}
+.hook-box{position:absolute;left:-22px;right:-22px;top:8px;bottom:4px;background:var(--teal);border-radius:18px;
+  transform-origin:0 50%;z-index:-1}
+.hook-txt{-webkit-text-stroke:0;color:#fff}
+.cap{position:absolute;left:70px;right:70px;top:1300px;display:flex;justify-content:center}
+.cap-in{font-weight:800;font-size:58px;line-height:1.18;text-align:center;color:#fff;word-spacing:0.16em;
+  -webkit-text-stroke:12px #000;paint-order:stroke fill;max-width:900px}
+.card{background:rgba(255,252,244,0.96);border-radius:34px;box-shadow:0 18px 50px rgba(0,0,0,0.28);color:var(--dark)}
+.grain-card{position:absolute;left:0;right:0;top:40px;height:420px;text-align:center}
+.grain-svg{width:520px;height:260px;display:block;margin:0 auto}
+.grain-label{position:absolute;left:0;right:0;top:268px;font-weight:900;font-size:52px;opacity:0;color:#fff;-webkit-text-stroke:11px #000;paint-order:stroke fill}
+.chip .hl,.rline .hl{color:#c4511f}
+.grain-label .hl{color:var(--accent)}
+
+.chips{position:absolute;left:60px;top:70px;display:flex;flex-direction:column;gap:14px}
+.chip{display:flex;align-items:center;gap:20px;background:rgba(255,252,244,0.96);border-radius:999px;
+  padding:16px 36px 16px 16px;font-weight:800;font-size:48px;color:var(--dark);box-shadow:0 10px 30px rgba(0,0,0,0.25);opacity:0}
+.num{display:inline-flex;align-items:center;justify-content:center;width:68px;height:68px;border-radius:50%;
+  background:var(--teal);color:#fff;font-weight:900;font-size:40px}
+.src{font-weight:700;font-size:30px;color:#555;margin-top:6px}
+.chips .src{color:#fff;-webkit-text-stroke:6px #000;paint-order:stroke fill;font-size:28px;opacity:0;padding-left:10px}
+.rice-card{position:absolute;left:60px;right:60px;top:140px;display:flex;align-items:center;gap:26px;padding:34px 40px}
+.rice-ico{width:190px;height:190px;flex:none}
+.rtitle{font-weight:900;font-size:72px;letter-spacing:-0.02em;line-height:1}
+.rline{font-weight:800;font-size:42px;line-height:1.25;margin-top:12px}
+.facts{position:absolute;right:48px;top:150px;width:640px;text-align:right}
+.facts .w{display:inline-block;white-space:nowrap}
+.facts .ch{display:inline-block}
+.ftitle{font-weight:900;font-size:76px;letter-spacing:-0.02em;line-height:1.05;margin-bottom:10px}
+.fline{font-weight:800;font-size:40px;line-height:1.3;color:#2a1d12}
+.fsrc{font-weight:700;font-size:28px;color:#6b5a48;margin-top:12px}
+.grain-label{font-size:46px;line-height:1.2}
+.burst{position:absolute;right:70px;top:300px;font-weight:900;font-size:120px;color:var(--accent);
+  -webkit-text-stroke:16px #000;paint-order:stroke fill;transform-origin:50% 50%}
+.scream{left:0;right:0;text-align:center;top:250px;font-size:128px}
+.cta-head{position:absolute;left:0;right:0;top:230px;text-align:center;font-weight:900;font-size:84px;color:#fff;
+  -webkit-text-stroke:14px #000;paint-order:stroke fill}
+.cbox{position:absolute;left:430px;right:60px;top:1430px;height:120px;background:#fff;border-radius:999px;
+  display:flex;align-items:center;padding:0 22px;gap:22px;box-shadow:0 14px 40px rgba(0,0,0,0.35)}
+.avatar{width:80px;height:80px;border-radius:50%;background:#f1e3c4;display:flex;align-items:center;justify-content:center;font-size:48px}
+.ctext{flex:1;font-weight:800;font-size:60px;color:#111;letter-spacing:0.04em;display:flex;align-items:center}
+.ltr{opacity:0}
+.caret{width:5px;height:60px;background:var(--teal);margin-left:6px}
+.send{font-size:54px;color:var(--teal)}
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="58.200" data-width="1080" data-height="1920" data-fps="24">
+<video id="v0" class="clip shot" src="assets/clips/s01.mp4" muted playsinline data-start="0.000" data-duration="4.136" data-media-start="0.000" data-track-index="0"></video>
+<video id="v1" class="clip shot" src="assets/clips/s02.mp4" muted playsinline data-start="4.136" data-duration="2.364" data-media-start="0.000" data-track-index="0"></video>
+<video id="v2" class="clip shot" src="assets/clips/s03.mp4" muted playsinline data-start="6.500" data-duration="7.227" data-media-start="0.000" data-track-index="0"></video>
+<video id="v3" class="clip shot" src="assets/clips/s04.mp4" muted playsinline data-start="13.727" data-duration="1.818" data-media-start="1.455" data-track-index="0"></video>
+<video id="v4" class="clip shot" src="assets/clips/s05.mp4" muted playsinline data-start="15.545" data-duration="6.318" data-media-start="0.000" data-track-index="0"></video>
+<video id="v5" class="clip shot" src="assets/clips/s05b.mp4" muted playsinline data-start="21.863" data-duration="1.909" data-media-start="1.273" data-track-index="0"></video>
+<video id="v6" class="clip shot" src="assets/clips/s06.mp4" muted playsinline data-start="23.772" data-duration="2.091" data-media-start="0.000" data-track-index="0"></video>
+<video id="v7" class="clip shot" src="assets/clips/s07-09.mp4" muted playsinline data-start="25.863" data-duration="10.864" data-media-start="0.000" data-track-index="0"></video>
+<video id="v8" class="clip shot" src="assets/clips/s10.mp4" muted playsinline data-start="36.727" data-duration="4.582" data-media-start="0.000" data-track-index="0"></video>
+<video id="v9" class="clip shot" src="assets/clips/s11.mp4" muted playsinline data-start="41.309" data-duration="7.309" data-media-start="0.000" data-track-index="0"></video>
+<video id="v10" class="clip shot" src="assets/clips/s12.mp4" muted playsinline data-start="48.618" data-duration="5.136" data-media-start="0.000" data-track-index="0"></video>
+<video id="v11" class="clip shot" src="assets/clips/s13.mp4" muted playsinline data-start="53.754" data-duration="4.446" data-media-start="0.136" data-track-index="0"></video>
+<audio id="mix" src="assets/audio/mix.wav" data-start="0" data-duration="58.200" data-volume="1" data-track-index="1"></audio>
+<div id="hook" class="clip layer" data-start="0" data-duration="2.300" data-track-index="2">
+  <div class="hook-line big" id="hook1"><span class="hook-box" id="hookbox"></span><span class="hook-txt">WHITE RICE</span></div>
+  <div class="hook-line" id="hook2">EVERY DAY? <svg viewBox="0 0 64 64" class="ico"><path d="M8 30h48a24 22 0 0 1-48 0z" fill="#0E7C74"/><path d="M14 30c2-12 34-12 36 0z" fill="#fff8e8"/><circle cx="25" cy="24" r="3" fill="#e9dcc0"/><circle cx="36" cy="22" r="3" fill="#e9dcc0"/><rect x="20" y="52" width="24" height="5" rx="2" fill="#0a5c56"/></svg></div>
+</div>
+<div id="cap0" class="clip cap" style="top:1300px" data-start="0.727" data-duration="1.571" data-track-index="3"><div class="cap-in">Itna <span class="hl">chawal?</span></div></div>
+<div id="cap1" class="clip cap" style="top:1300px" data-start="2.318" data-duration="1.818" data-track-index="3"><div class="cap-in">Apne <span class="hl">papa jaisa</span> banna hai kya?</div></div>
+<div id="cap2" class="clip cap" style="top:1300px" data-start="4.227" data-duration="2.273" data-track-index="3"><div class="cap-in">Par Dadi, ye toh <span class="hl">sab khaate hain!</span></div></div>
+<div id="cap3" class="clip cap" style="top:1300px" data-start="6.682" data-duration="3.116" data-track-index="3"><div class="cap-in">Haan, aur sab <span class="hl">doctor</span> ke chakkar bhi lagaate hain.</div></div>
+<div id="cap4" class="clip cap" style="top:1300px" data-start="9.818" data-duration="2.007" data-track-index="3"><div class="cap-in">Polish karke <span class="hl">fibre</span> utaar diya.</div></div>
+<div id="cap5" class="clip cap" style="top:1300px" data-start="11.845" data-duration="1.882" data-track-index="3"><div class="cap-in">Ab bas <span class="hl">starch</span> bacha hai.</div></div>
+<div id="cap6" class="clip cap" style="top:1560px" data-start="14.436" data-duration="1.109" data-track-index="3"><div class="cap-in"><span class="hl">Toh?</span></div></div>
+<div id="cap7" class="clip cap" style="top:1300px" data-start="15.727" data-duration="1.434" data-track-index="3"><div class="cap-in">Toh <span class="hl">sugar</span> jaldi upar,</div></div>
+<div id="cap8" class="clip cap" style="top:1300px" data-start="17.181" data-duration="1.780" data-track-index="3"><div class="cap-in"><span class="hl">bhookh</span> jaldi wapas…</div></div>
+<div id="cap9" class="clip cap" style="top:1300px" data-start="18.981" data-duration="1.435" data-track-index="3"><div class="cap-in">aur roz ka <span class="hl">pahaad?</span></div></div>
+<div id="cap10" class="clip cap" style="top:1300px" data-start="20.436" data-duration="1.427" data-track-index="3"><div class="cap-in"><span class="hl">Diabetes</span> ka risk.</div></div>
+<div id="cap11" class="clip cap" style="top:1440px" data-start="22.208" data-duration="1.564" data-track-index="3"><div class="cap-in">Phir <span class="hl">khaaun kya?</span></div></div>
+<div id="cap12" class="clip cap" style="top:1300px" data-start="24.027" data-duration="1.836" data-track-index="3"><div class="cap-in">Wahi, jo <span class="hl">hum khaate the.</span></div></div>
+<div id="cap13" class="clip cap" style="top:1300px" data-start="26.045" data-duration="1.363" data-track-index="3"><div class="cap-in"><span class="hl">Brown.</span> Upar ki parat saath hai,</div></div>
+<div id="cap14" class="clip cap" style="top:1300px" data-start="27.408" data-duration="2.071" data-track-index="3"><div class="cap-in">pet der tak bhara.</div></div>
+<div id="cap15" class="clip cap" style="top:1300px" data-start="29.499" data-duration="1.455" data-track-index="3"><div class="cap-in"><span class="hl">Red.</span> Kerala ka Matta.</div></div>
+<div id="cap16" class="clip cap" style="top:1300px" data-start="30.954" data-duration="1.980" data-track-index="3"><div class="cap-in">Rang hi <span class="hl">antioxidant</span> hai.</div></div>
+<div id="cap17" class="clip cap" style="top:1300px" data-start="32.954" data-duration="1.454" data-track-index="3"><div class="cap-in"><span class="hl">Black.</span> Forbidden rice.</div></div>
+<div id="cap18" class="clip cap" style="top:1300px" data-start="34.408" data-duration="2.319" data-track-index="3"><div class="cap-in">Kabhi sirf <span class="hl">raja</span> khaate the.</div></div>
+<div id="cap19" class="clip cap" style="top:1300px" data-start="36.927" data-duration="2.191" data-track-index="3"><div class="cap-in">Taste toh <span class="hl">ganda</span> hi hoga na—</div></div>
+<div id="cap20" class="clip cap" style="top:1300px" data-start="40.091" data-duration="1.218" data-track-index="3"><div class="cap-in"><span class="hl">Mmm! Mmm!</span></div></div>
+<div id="cap21" class="clip cap" style="top:1300px" data-start="41.436" data-duration="2.217" data-track-index="3"><div class="cap-in">Agar aapko bhi <span class="hl">white rice</span> badalna hai,</div></div>
+<div id="cap22" class="clip cap" style="top:1300px" data-start="43.673" data-duration="1.980" data-track-index="3"><div class="cap-in">aur <span class="hl">red ya brown</span> try karna hai,</div></div>
+<div id="cap23" class="clip cap" style="top:1300px" data-start="45.673" data-duration="1.454" data-track-index="3"><div class="cap-in">par pata nahi kahan milega</div></div>
+<div id="cap24" class="clip cap" style="top:1300px" data-start="47.127" data-duration="1.491" data-track-index="3"><div class="cap-in">ya kaunsa <span class="hl">best</span> hai…</div></div>
+<div id="cap25" class="clip cap" style="top:1300px" data-start="48.727" data-duration="1.189" data-track-index="3"><div class="cap-in">Comment karo <span class="hl">&#x27;RICE&#x27;.</span></div></div>
+<div id="cap26" class="clip cap" style="top:1300px" data-start="49.936" data-duration="1.771" data-track-index="3"><div class="cap-in">Main best rice ka <span class="hl">guide,</span></div></div>
+<div id="cap27" class="clip cap" style="top:1300px" data-start="51.727" data-duration="1.126" data-track-index="3"><div class="cap-in"><span class="hl">link</span> ke saath,</div></div>
+<div id="cap28" class="clip cap" style="top:1300px" data-start="52.873" data-duration="0.881" data-track-index="3"><div class="cap-in">share kar dungi.</div></div>
+<div id="cap29" class="clip cap" style="top:1300px" data-start="53.782" data-duration="1.427" data-track-index="3"><div class="cap-in">Dadi, ye sab toh theek hai,</div></div>
+<div id="cap30" class="clip cap" style="top:1300px" data-start="55.182" data-duration="1.545" data-track-index="3"><div class="cap-in">par aap jo <span class="hl">chai</span> pee rahe ho…</div></div>
+<div id="grain" class="clip layer" data-start="9.559" data-duration="4.168" data-track-index="4">
+  <div class="grain-card" id="graincard">
+    <svg viewBox="0 0 400 200" class="grain-svg">
+      <!-- the white (polished) grain underneath -->
+      <path d="M48 100 C60 38 320 30 352 100 C320 170 60 162 48 100Z" fill="#fffdf6" stroke="#2a2016" stroke-width="7"/>
+      <path d="M90 82 C150 62 250 60 300 78" fill="none" stroke="#e7dcc4" stroke-width="8" stroke-linecap="round"/>
+      <text id="starchtxt" x="200" y="116" text-anchor="middle" font-family="Inter" font-weight="900" font-size="46" fill="#c4511f" opacity="0">STARCH</text>
+      <!-- the bran coat that gets polished off -->
+      <g id="bran">
+        <path d="M30 100 C44 22 334 12 370 100 C334 186 44 178 30 100Z" fill="#a8743f" stroke="#2a2016" stroke-width="7"/>
+        <path d="M70 70 C140 48 260 46 330 68 M60 100 C150 86 260 86 344 100 M70 130 C150 150 260 152 330 132"
+              fill="none" stroke="#7d5229" stroke-width="5" stroke-linecap="round"/>
+        <ellipse cx="56" cy="100" rx="16" ry="26" fill="#e8c35a" stroke="#2a2016" stroke-width="5"/>
+        <text x="210" y="114" text-anchor="middle" font-family="Inter" font-weight="900" font-size="38" fill="#fff">BRAN · FIBRE</text>
+      </g>
+    </svg>
+    <div class="grain-label" id="gl1">Polishing strips the bran:<br/><span class="hl">fibre, magnesium, B vitamins</span></div>
+    <div class="grain-label" id="gl2">What's left: <span class="hl">~80% carbs</span>,<br/>mostly starch</div>
+  </div>
+</div>
+<div id="points" class="clip layer" data-start="15.722" data-duration="6.141" data-track-index="4">
+  <div class="chips"><div class="chip" id="chip0"><span class="num">1</span><svg viewBox="0 0 64 64" class="ico"><path d="M8 52h48" stroke="#141414" stroke-width="5" fill="none"/><path d="M10 46l14-14 10 8 18-22" stroke="#d6402b" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M42 16h12v12" stroke="#d6402b" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg><span class='hl'>High</span> glycaemic index</div><div class="chip" id="chip1"><span class="num">2</span><svg viewBox="0 0 64 64" class="ico"><circle cx="34" cy="34" r="22" fill="#fff" stroke="#141414" stroke-width="4"/><circle cx="34" cy="34" r="12" fill="none" stroke="#c9c2b2" stroke-width="3"/><path d="M6 12v40M2 12v12a4 4 0 0 0 8 0V12" stroke="#141414" stroke-width="3.5" fill="none" stroke-linecap="round"/></svg>Low fibre = <span class='hl'>hungry sooner</span></div><div class="chip" id="chip2"><span class="num">3</span><svg viewBox="0 0 64 64" class="ico"><path d="M4 54L24 18l10 16 6-8 20 28z" fill="#f4efe3" stroke="#141414" stroke-width="4" stroke-linejoin="round"/><path d="M17 31l7-13 7 11-4 3-3-4z" fill="#fff"/></svg><span class='hl'>Portion size</span> adds up</div><div class="chip" id="chip3"><span class="num">4</span><svg viewBox="0 0 64 64" class="ico"><path d="M32 6L60 56H4z" fill="#F5B82E" stroke="#141414" stroke-width="4" stroke-linejoin="round"/><rect x="29" y="22" width="6" height="18" rx="3" fill="#141414"/><circle cx="32" cy="47" r="3.5" fill="#141414"/></svg>Type 2 diabetes <span class='hl'>risk ↑</span></div><div class="src" id="src5">Source: BMJ 2012 meta-analysis (Hu et al.) · observational</div></div>
+</div>
+<div id="fact0" class="clip layer" data-start="26.099" data-duration="3.355" data-track-index="4"><div class="facts" id="facts0"><div class="ftitle" style="color:#6e4318"><span class="w"><span class="ch">B</span><span class="ch">r</span><span class="ch">o</span><span class="ch">w</span><span class="ch">n</span></span> <span class="w"><span class="ch">r</span><span class="ch">i</span><span class="ch">c</span><span class="ch">e</span></span></div><div class="fline"><span class="w"><span class="ch">W</span><span class="ch">h</span><span class="ch">o</span><span class="ch">l</span><span class="ch">e</span></span> <span class="w"><span class="ch">g</span><span class="ch">r</span><span class="ch">a</span><span class="ch">i</span><span class="ch">n</span><span class="ch">:</span></span> <span class="w"><span class="ch">b</span><span class="ch">r</span><span class="ch">a</span><span class="ch">n</span></span> <span class="w"><span class="ch">+</span></span> <span class="w"><span class="ch">g</span><span class="ch">e</span><span class="ch">r</span><span class="ch">m</span></span> <span class="w"><span class="ch">k</span><span class="ch">e</span><span class="ch">p</span><span class="ch">t</span></span></div><div class="fline"><span class="w"><span class="ch">~</span><span class="ch">4</span><span class="ch">×</span></span> <span class="w"><span class="ch">t</span><span class="ch">h</span><span class="ch">e</span></span> <span class="w"><span class="ch">m</span><span class="ch">a</span><span class="ch">g</span><span class="ch">n</span><span class="ch">e</span><span class="ch">s</span><span class="ch">i</span><span class="ch">u</span><span class="ch">m</span></span> <span class="w"><span class="ch">o</span><span class="ch">f</span></span> <span class="w"><span class="ch">w</span><span class="ch">h</span><span class="ch">i</span><span class="ch">t</span><span class="ch">e</span></span></div><div class="fsrc"><span class="w"><span class="ch">S</span><span class="ch">o</span><span class="ch">u</span><span class="ch">r</span><span class="ch">c</span><span class="ch">e</span><span class="ch">:</span></span> <span class="w"><span class="ch">U</span><span class="ch">S</span><span class="ch">D</span><span class="ch">A</span></span> <span class="w"><span class="ch">F</span><span class="ch">o</span><span class="ch">o</span><span class="ch">d</span><span class="ch">D</span><span class="ch">a</span><span class="ch">t</span><span class="ch">a</span></span> <span class="w"><span class="ch">C</span><span class="ch">e</span><span class="ch">n</span><span class="ch">t</span><span class="ch">r</span><span class="ch">a</span><span class="ch">l</span></span></div></div></div>
+<div id="fact1" class="clip layer" data-start="29.554" data-duration="3.354" data-track-index="4"><div class="facts" id="facts1"><div class="ftitle" style="color:#a3271f"><span class="w"><span class="ch">R</span><span class="ch">e</span><span class="ch">d</span></span> <span class="w"><span class="ch">r</span><span class="ch">i</span><span class="ch">c</span><span class="ch">e</span></span></div><div class="fline"><span class="w"><span class="ch">P</span><span class="ch">a</span><span class="ch">l</span><span class="ch">a</span><span class="ch">k</span><span class="ch">k</span><span class="ch">a</span><span class="ch">d</span><span class="ch">a</span><span class="ch">n</span></span> <span class="w"><span class="ch">M</span><span class="ch">a</span><span class="ch">t</span><span class="ch">t</span><span class="ch">a</span><span class="ch">,</span></span> <span class="w"><span class="ch">K</span><span class="ch">e</span><span class="ch">r</span><span class="ch">a</span><span class="ch">l</span><span class="ch">a</span></span></div><div class="fline"><span class="w"><span class="ch">G</span><span class="ch">I</span><span class="ch">-</span><span class="ch">t</span><span class="ch">a</span><span class="ch">g</span><span class="ch">g</span><span class="ch">e</span><span class="ch">d</span><span class="ch">,</span></span> <span class="w"><span class="ch">p</span><span class="ch">a</span><span class="ch">r</span><span class="ch">b</span><span class="ch">o</span><span class="ch">i</span><span class="ch">l</span><span class="ch">e</span><span class="ch">d</span></span> <span class="w"><span class="ch">g</span><span class="ch">r</span><span class="ch">a</span><span class="ch">i</span><span class="ch">n</span></span></div><div class="fsrc"><span class="w"><span class="ch">S</span><span class="ch">o</span><span class="ch">u</span><span class="ch">r</span><span class="ch">c</span><span class="ch">e</span><span class="ch">:</span></span> <span class="w"><span class="ch">G</span><span class="ch">I</span></span> <span class="w"><span class="ch">R</span><span class="ch">e</span><span class="ch">g</span><span class="ch">i</span><span class="ch">s</span><span class="ch">t</span><span class="ch">r</span><span class="ch">y</span></span> <span class="w"><span class="ch">o</span><span class="ch">f</span></span> <span class="w"><span class="ch">I</span><span class="ch">n</span><span class="ch">d</span><span class="ch">i</span><span class="ch">a</span></span></div></div></div>
+<div id="fact2" class="clip layer" data-start="33.008" data-duration="3.719" data-track-index="4"><div class="facts" id="facts2"><div class="ftitle" style="color:#4b2d63"><span class="w"><span class="ch">B</span><span class="ch">l</span><span class="ch">a</span><span class="ch">c</span><span class="ch">k</span></span> <span class="w"><span class="ch">r</span><span class="ch">i</span><span class="ch">c</span><span class="ch">e</span></span></div><div class="fline"><span class="w"><span class="ch">C</span><span class="ch">h</span><span class="ch">a</span><span class="ch">k</span><span class="ch">-</span><span class="ch">H</span><span class="ch">a</span><span class="ch">o</span><span class="ch">,</span></span> <span class="w"><span class="ch">M</span><span class="ch">a</span><span class="ch">n</span><span class="ch">i</span><span class="ch">p</span><span class="ch">u</span><span class="ch">r</span></span> <span class="w"><span class="ch">(</span><span class="ch">G</span><span class="ch">I</span><span class="ch">)</span></span></div><div class="fline"><span class="w"><span class="ch">D</span><span class="ch">e</span><span class="ch">e</span><span class="ch">p</span></span> <span class="w"><span class="ch">p</span><span class="ch">u</span><span class="ch">r</span><span class="ch">p</span><span class="ch">l</span><span class="ch">e</span></span> <span class="w"><span class="ch">=</span></span> <span class="w"><span class="ch">a</span><span class="ch">n</span><span class="ch">t</span><span class="ch">h</span><span class="ch">o</span><span class="ch">c</span><span class="ch">y</span><span class="ch">a</span><span class="ch">n</span><span class="ch">i</span><span class="ch">n</span><span class="ch">s</span></span></div><div class="fsrc"><span class="w"><span class="ch">S</span><span class="ch">o</span><span class="ch">u</span><span class="ch">r</span><span class="ch">c</span><span class="ch">e</span><span class="ch">:</span></span> <span class="w"><span class="ch">G</span><span class="ch">I</span></span> <span class="w"><span class="ch">R</span><span class="ch">e</span><span class="ch">g</span><span class="ch">i</span><span class="ch">s</span><span class="ch">t</span><span class="ch">r</span><span class="ch">y</span></span> <span class="w"><span class="ch">·</span></span> <span class="w"><span class="ch">G</span><span class="ch">o</span><span class="ch">v</span><span class="ch">t</span><span class="ch">.</span></span> <span class="w"><span class="ch">o</span><span class="ch">f</span></span> <span class="w"><span class="ch">M</span><span class="ch">a</span><span class="ch">n</span><span class="ch">i</span><span class="ch">p</span><span class="ch">u</span><span class="ch">r</span></span></div></div></div>
+<div id="cta" class="clip layer" data-start="48.868" data-duration="4.886" data-track-index="4">
+  <div class="cbox" id="cbox"><div class="avatar"><svg viewBox="0 0 64 64" class="ico"><circle cx="32" cy="32" r="30" fill="#f1e3c4"/><circle cx="32" cy="22" r="12" fill="#d9dde2"/><circle cx="32" cy="32" r="13" fill="#c98f62"/><circle cx="26" cy="31" r="5" fill="none" stroke="#c9a23a" stroke-width="2"/><circle cx="38" cy="31" r="5" fill="none" stroke="#c9a23a" stroke-width="2"/><circle cx="32" cy="23" r="2" fill="#c0242b"/><path d="M14 64c2-12 10-16 18-16s16 4 18 16z" fill="#0E7C74"/></svg></div><div class="ctext"><span class="ltr" id="ltr0">R</span><span class="ltr" id="ltr1">I</span><span class="ltr" id="ltr2">C</span><span class="ltr" id="ltr3">E</span><span class="caret" id="caret"></span></div><div class="send"><svg viewBox="0 0 64 64" class="ico"><path d="M6 8l54 24L6 56l8-24z" fill="#0E7C74"/></svg></div></div>
+</div>
+<div id="scream" class="clip layer" data-start="56.909" data-duration="1.291" data-track-index="4"><div class="burst scream" id="screamtxt">AAAIIIEEE!!</div></div>
+</div>
+<script>
+const tl = gsap.timeline({ paused: true });
+tl.fromTo("#hook1",{scale:1.45,opacity:0},{scale:1,opacity:1,duration:0.22,ease:"power4.out"},0.02);
+tl.fromTo("#hook2",{scale:1.45,opacity:0},{scale:1,opacity:1,duration:0.22,ease:"power4.out"},0.40);
+tl.fromTo("#hookbox",{scaleX:0},{scaleX:1,duration:0.28,ease:"power3.out"},0.08);
+tl.to("#hook",{y:-60,opacity:0,duration:0.2,ease:"power2.in"},2.080);
+tl.fromTo("#cap0 .cap-in",{y:26,opacity:0},{y:0,opacity:1,duration:0.14,ease:"power3.out"},0.727);
+tl.fromTo("#cap1 .cap-in",{y:26,opacity:0},{y:0,opacity:1,duration:0.14,ease:"power3.out"},2.318);
+tl.fromTo("#cap2 .cap-in",{y:26,opacity:0},{y:0,opacity:1,duration:0.14,ease:"power3.out"},4.227);
+tl.fromTo("#cap3 .cap-in",{y:26,opacity:0},{y:0,opacity:1,duration:0.14,ease:"power3.out"},6.682);
+tl.fromTo("#cap4 .cap-in",{y:26,opacity:0},{y:0,opacity:1,duration:0.14,ease:"power3.out"},9.818);
+tl.fromTo("#cap5 .cap-in",{y:26,opacity:0},{y:0,opacity:1,duration:0.14,ease:"power3.out"},11.845);
+tl.fromTo("#cap6 .cap-in",{y:26,opacity:0},{y:0,opacity:1,duration:0.14,ease:"power3.out"},14.436);
+tl.fromTo("#cap7 .cap-in",{y:26,opacity:0},{y:0,opacity:1,duration:0.14,ease:"power3.out"},15.727);
+tl.fromTo("#cap8 .cap-in",{y:26,opacity:0},{y:0,opacity:1,duration:0.14,ease:"power3.out"},17.181);
+tl.fromTo("#cap9 .cap-in",{y:26,opacity:0},{y:0,opacity:1,duration:0.14,ease:"power3.out"},18.981);
+tl.fromTo("#cap10 .cap-in",{y:26,opacity:0},{y:0,opacity:1,duration:0.14,ease:"power3.out"},20.436);
+tl.fromTo("#cap11 .cap-in",{y:26,opacity:0},{y:0,opacity:1,duration:0.14,ease:"power3.out"},22.208);
+tl.fromTo("#cap12 .cap-in",{y:26,opacity:0},{y:0,opacity:1,duration:0.14,ease:"power3.out"},24.027);
+tl.fromTo("#cap13 .cap-in",{y:26,opacity:0},{y:0,opacity:1,duration:0.14,ease:"power3.out"},26.045);
+tl.fromTo("#cap14 .cap-in",{y:26,opacity:0},{y:0,opacity:1,duration:0.14,ease:"power3.out"},27.408);
+tl.fromTo("#cap15 .cap-in",{y:26,opacity:0},{y:0,opacity:1,duration:0.14,ease:"power3.out"},29.499);
+tl.fromTo("#cap16 .cap-in",{y:26,opacity:0},{y:0,opacity:1,duration:0.14,ease:"power3.out"},30.954);
+tl.fromTo("#cap17 .cap-in",{y:26,opacity:0},{y:0,opacity:1,duration:0.14,ease:"power3.out"},32.954);
+tl.fromTo("#cap18 .cap-in",{y:26,opacity:0},{y:0,opacity:1,duration:0.14,ease:"power3.out"},34.408);
+tl.fromTo("#cap19 .cap-in",{y:26,opacity:0},{y:0,opacity:1,duration:0.14,ease:"power3.out"},36.927);
+tl.fromTo("#cap20 .cap-in",{y:26,opacity:0},{y:0,opacity:1,duration:0.14,ease:"power3.out"},40.091);
+tl.fromTo("#cap21 .cap-in",{y:26,opacity:0},{y:0,opacity:1,duration:0.14,ease:"power3.out"},41.436);
+tl.fromTo("#cap22 .cap-in",{y:26,opacity:0},{y:0,opacity:1,duration:0.14,ease:"power3.out"},43.673);
+tl.fromTo("#cap23 .cap-in",{y:26,opacity:0},{y:0,opacity:1,duration:0.14,ease:"power3.out"},45.673);
+tl.fromTo("#cap24 .cap-in",{y:26,opacity:0},{y:0,opacity:1,duration:0.14,ease:"power3.out"},47.127);
+tl.fromTo("#cap25 .cap-in",{y:26,opacity:0},{y:0,opacity:1,duration:0.14,ease:"power3.out"},48.727);
+tl.fromTo("#cap26 .cap-in",{y:26,opacity:0},{y:0,opacity:1,duration:0.14,ease:"power3.out"},49.936);
+tl.fromTo("#cap27 .cap-in",{y:26,opacity:0},{y:0,opacity:1,duration:0.14,ease:"power3.out"},51.727);
+tl.fromTo("#cap28 .cap-in",{y:26,opacity:0},{y:0,opacity:1,duration:0.14,ease:"power3.out"},52.873);
+tl.fromTo("#cap29 .cap-in",{y:26,opacity:0},{y:0,opacity:1,duration:0.14,ease:"power3.out"},53.782);
+tl.fromTo("#cap30 .cap-in",{y:26,opacity:0},{y:0,opacity:1,duration:0.14,ease:"power3.out"},55.182);
+tl.fromTo("#graincard",{y:-40,opacity:0},{y:0,opacity:1,duration:0.3,ease:"power3.out"},9.559);
+tl.fromTo("#bran",{x:0,y:0,rotation:0,opacity:1},{x:300,y:-190,rotation:28,opacity:0,duration:0.6,ease:"power2.in",transformOrigin:"50% 50%"},9.909);
+tl.fromTo("#gl1",{opacity:0,y:14},{opacity:1,y:0,duration:0.2,ease:"power3.out"},10.159);
+tl.to("#gl1",{opacity:0,y:-14,duration:0.15},11.859);
+tl.fromTo("#starchtxt",{opacity:0,scale:1.6,transformOrigin:"50% 50%"},{opacity:1,scale:1,duration:0.2,ease:"power4.out"},11.909);
+tl.fromTo("#gl2",{opacity:0,y:14},{opacity:1,y:0,duration:0.2,ease:"power3.out"},11.959);
+tl.to("#graincard",{y:-40,opacity:0,duration:0.18,ease:"power2.in"},13.527);
+tl.fromTo("#chip0",{x:-70,opacity:0},{x:0,opacity:1,duration:0.24,ease:"power3.out"},15.772);
+tl.fromTo("#chip1",{x:-70,opacity:0},{x:0,opacity:1,duration:0.24,ease:"power3.out"},17.227);
+tl.fromTo("#chip2",{x:-70,opacity:0},{x:0,opacity:1,duration:0.24,ease:"power3.out"},19.018);
+tl.fromTo("#chip3",{x:-70,opacity:0},{x:0,opacity:1,duration:0.24,ease:"power3.out"},20.472);
+tl.fromTo("#src5",{opacity:0},{opacity:1,duration:0.2},20.672);
+tl.to("#points .chips",{x:-80,opacity:0,duration:0.18,ease:"power2.in"},21.663);
+tl.fromTo("#facts0 .ch",{opacity:0,y:10},{opacity:1,y:0,duration:0.22,ease:"power2.out",stagger:0.018},26.099);
+tl.to("#facts0",{opacity:0,duration:0.22,ease:"power1.in"},29.204);
+tl.fromTo("#facts1 .ch",{opacity:0,y:10},{opacity:1,y:0,duration:0.22,ease:"power2.out",stagger:0.018},29.554);
+tl.to("#facts1",{opacity:0,duration:0.22,ease:"power1.in"},32.658);
+tl.fromTo("#facts2 .ch",{opacity:0,y:10},{opacity:1,y:0,duration:0.22,ease:"power2.out",stagger:0.018},33.008);
+tl.to("#facts2",{opacity:0,duration:0.22,ease:"power1.in"},36.477);
+tl.fromTo("#cbox",{y:60,opacity:0},{y:0,opacity:1,duration:0.26,ease:"power3.out"},48.968);
+tl.fromTo("#ltr0",{opacity:0},{opacity:1,duration:0.01},49.268);
+tl.fromTo("#ltr1",{opacity:0},{opacity:1,duration:0.01},49.378);
+tl.fromTo("#ltr2",{opacity:0},{opacity:1,duration:0.01},49.488);
+tl.fromTo("#ltr3",{opacity:0},{opacity:1,duration:0.01},49.598);
+tl.fromTo("#screamtxt",{scale:0.3,opacity:0,rotation:-10},{scale:1,opacity:1,rotation:-6,duration:0.16,ease:"power4.out"},56.909);
+tl.to("#screamtxt",{x:10,duration:0.05},57.069);
+tl.to("#screamtxt",{x:-10,duration:0.05},57.119);
+tl.to("#screamtxt",{x:10,duration:0.05},57.169);
+tl.to("#screamtxt",{x:-10,duration:0.05},57.219);
+tl.to("#screamtxt",{x:10,duration:0.05},57.269);
+tl.to("#screamtxt",{x:-10,duration:0.05},57.319);
+tl.to("#screamtxt",{x:10,duration:0.05},57.369);
+tl.to("#screamtxt",{x:-10,duration:0.05},57.419);
+tl.to("#screamtxt",{x:10,duration:0.05},57.469);
+tl.to("#screamtxt",{x:-10,duration:0.05},57.519);
+tl.to("#screamtxt",{x:0,duration:0.05},57.569);
+window.__timelines = window.__timelines || {};
+window.__timelines["main"] = tl;
+tl.seek(0);
+</script>
+</body>
+</html>

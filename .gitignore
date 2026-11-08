@@ -3,3 +3,5 @@ assets/**
 !assets/**/
 !assets/README.md
 !assets/prompts/**/*.md
+# other creators' reels and private reference images
+reference/

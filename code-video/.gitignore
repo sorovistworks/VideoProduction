@@ -11,3 +11,11 @@ __pycache__/
 projects/*/docs/data/raw/
 projects/*/audio/takes/*.wav
 projects/**/audio/voice*.wav
+# project media (drafts, takes, clips, review sheets) is too large for git; finals live in ../assets/
+projects/**/*.mp4
+projects/**/*.mp3
+projects/**/*.wav
+projects/**/*.png
+projects/**/*.jpg
+projects/**/*.raw
+projects/**/.hyperframes/

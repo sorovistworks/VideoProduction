@@ -1,0 +1,128 @@
+{
+  "total": 55.53,
+  "lines": [
+    {
+      "shot": "1",
+      "file": "audio/final-lines/d01a.wav",
+      "start": 0.0,
+      "end": 2.47,
+      "gap_after": 1.5,
+      "note": "Papa 'why me?' beat at the fridge"
+    },
+    {
+      "shot": "2",
+      "file": "audio/final-lines/r01a.wav",
+      "start": 3.97,
+      "end": 5.79,
+      "gap_after": 0.12,
+      "note": ""
+    },
+    {
+      "shot": "2",
+      "file": "audio/final-lines/d02a.wav",
+      "start": 5.91,
+      "end": 8.56,
+      "gap_after": 0.5,
+      "note": "Rohan's face turns worried"
+    },
+    {
+      "shot": "3",
+      "file": "audio/final-lines/d03.wav",
+      "start": 9.06,
+      "end": 12.55,
+      "gap_after": 0.1,
+      "note": ""
+    },
+    {
+      "shot": "4",
+      "file": "audio/final-lines/r02a-single.wav",
+      "start": 12.65,
+      "end": 12.99,
+      "gap_after": 0.1,
+      "note": ""
+    },
+    {
+      "shot": "5",
+      "file": "audio/final-lines/d04.wav",
+      "start": 13.09,
+      "end": 18.91,
+      "gap_after": 0.15,
+      "note": ""
+    },
+    {
+      "shot": "5",
+      "file": "audio/final-lines/r03.wav",
+      "start": 19.06,
+      "end": 20.41,
+      "gap_after": 0.25,
+      "note": ""
+    },
+    {
+      "shot": "6",
+      "file": "audio/final-lines/d05.wav",
+      "start": 20.66,
+      "end": 22.34,
+      "gap_after": 0.2,
+      "note": ""
+    },
+    {
+      "shot": "7",
+      "file": "audio/final-lines/d06.wav",
+      "start": 22.54,
+      "end": 26.21,
+      "gap_after": 0.15,
+      "note": ""
+    },
+    {
+      "shot": "8",
+      "file": "audio/final-lines/d07.wav",
+      "start": 26.36,
+      "end": 29.98,
+      "gap_after": 0.15,
+      "note": ""
+    },
+    {
+      "shot": "9",
+      "file": "audio/final-lines/d08.wav",
+      "start": 30.13,
+      "end": 33.77,
+      "gap_after": 0.3,
+      "note": "beat before the spoon gag"
+    },
+    {
+      "shot": "10",
+      "file": "audio/final-lines/r04a.wav",
+      "start": 34.07,
+      "end": 37.31,
+      "gap_after": 0.3,
+      "note": ""
+    },
+    {
+      "shot": "11",
+      "file": "audio/final-lines/d09.wav",
+      "start": 37.61,
+      "end": 44.24,
+      "gap_after": 0.1,
+      "note": ""
+    },
+    {
+      "shot": "12",
+      "file": "audio/final-lines/d10.wav",
+      "start": 44.34,
+      "end": 49.13,
+      "gap_after": 0.4,
+      "note": ""
+    },
+    {
+      "shot": "13",
+      "file": "audio/final-lines/r05c-tight.wav",
+      "start": 49.53,
+      "end": 53.03,
+      "gap_after": 2.5,
+      "note": "Rohan close-up (02) says the line, then Dadi's hand comes in from the left and pulls his ear (08): Rohan screams with mouth open in a high-pitched girly shriek, ~2.5 s. No death stare, no black screen, Dadi has no line."
+    }
+  ],
+  "rohan_gain_db": -2.5,
+  "rohan_tempo": 1.25,
+  "dadi_tempo": 1.25
+}

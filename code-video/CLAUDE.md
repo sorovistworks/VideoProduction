@@ -2,7 +2,7 @@
 
 Every video here is rendered from code. A model writes the scene; this machine draws every frame; ffmpeg encodes. No per-render fees, no AI video generation unless a shot truly needs a real face (then see Routes).
 
-**Run every command from `code-video/`** (this folder is its own npm + uv project). Start a new video with the `video` skill (`.claude/skills/video/SKILL.md`).
+**Run every command from `code-video/`** (this folder is its own npm + uv project). Start a new video with the `code-video` skill (`.claude/skills/code-video/SKILL.md`); a captions reel on the user's own clip with the `captions-reel` skill.
 
 ## Layout
 - `engine/` shared renderer, preview server, motion library. Do not copy these into projects.
@@ -31,7 +31,9 @@ Every video here is rendered from code. A model writes the scene; this machine d
 - Review sheets: `node tools/review.mjs projects/<name>/out/final_1920x1080.mp4 [--at 4.2]` → read the PNGs it lists (contact, phone, strip, wave: 300 px = 1 s).
 - Motion audit: `uv run tools/motion_audit.py projects/<name>/out/draft_1920x1080.mp4` (static stretches, one-frame pops, flashes).
 - Beats: `uv run tools/beats.py audio/track.wav -o docs/beats.json`
-- Word timings: `uv run tools/words.py audio/voice.mp3 -o docs/timing.json` (small.en is downloaded)
+- Word timings: `uv run tools/words.py audio/voice.mp3 -o docs/timing.json` (small.en is downloaded; reads video files too; starts snapped to the waveform; prints `index:word`, doubtful words marked `(?)`)
+- Footage prep: `uv run tools/footage.py clip.mp4 projects/<name> [--from <s> | --no-cutout] [--clean]` → colour-correct frames, the clip's voice, soft-edged cut-out (rembg birefnet-portrait, model in `.models/`), head line → `docs/footage.json`
+- Storyboard: `node engine/render.mjs projects/<name> --stills board` renders one still per entry of the page's `window.STORYBOARD`
 - Script check: `uv run tools/scriptdiff.py audio/narration.txt docs/timing.json` (dropped/changed words in the take)
 - Captions: `uv run tools/srt.py docs/timing.json -o out/captions.srt`
 - Thumbnail: a `thumb.html` page in the project (same seek contract, static at t=0) → `node engine/render.mjs projects/<name> --page thumb.html --w 1280 --h 720 --stills 0`
@@ -79,6 +81,7 @@ Every video here is rendered from code. A model writes the scene; this machine d
 - Motion graphics, kinetic type, product/UI ads, explainers → this engine (canvas/DOM/SVG/three.js page + `seek(t)`).
 - 3D scene with motion graphics (maquettes, cards, UI in space) → `templates/starter-3d/` (three.js through this engine).
 - Many videos from one template → Remotion (`npx skills add remotion-dev/skills`), in its own folder under `code-video/`.
+- The user's own talking clip with captions (a word behind the head, captions in front, depth) → the `captions-reel` skill: `tools/footage.py` + `templates/footage/` through this engine. Style lives in `refs/captions/STYLE.md`. Its captions are not the banned karaoke: up to 3 words that pop on, no highlight sweep.
 - Fast captioned verticals → HyperFrames (`npx hyperframes init`), in its own folder under `code-video/`.
 - Maths/science explainer → Manim (`uv add manim`).
 - 3D product shot with real materials → Blender 5.2 + the `blender` MCP server in `code-video/.mcp.json` (Claude Code only loads it when started in `code-video/`; the add-on must be installed and enabled in Blender, and Blender must be running; for free CC0 HDRIs/models tick Poly Haven in the N panel → MCP for Blender). Work in a fresh .blend: the model runs real code. Headless render: `"/c/Program Files/Blender Foundation/Blender 5.2/blender.exe" -b scene.blend -o //frames/f#### -F PNG -s 1 -e 360 -a`, then `ffmpeg -y -framerate 30 -i frames/f%04d.png -c:v libx264 -crf 16 -pix_fmt yuv420p out/silent_1920x1080.mp4`.

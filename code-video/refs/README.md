@@ -10,6 +10,7 @@ Your reference library, one folder per genre. Drop clips, screenshots or mood-bo
 | `kinetic-type/` | typography-led edits, quotes, lyric videos |
 | `3d/` | product shots, 3D scenes, maquettes |
 | `social/` | Reels / Shorts / TikTok hooks, pacing and formats |
+| `captions/` | caption reels you'd steal from: fonts, sizes, how words enter and leave, depth; `STYLE.md` holds the house rules |
 
 Add any folder you like (`music-videos/`, `brand-x/` ...). A brand you work for repeatedly deserves its own folder.
 

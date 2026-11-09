@@ -1,0 +1,206 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>captions reel</title>
+<style>
+  @font-face { font-family: "Anton"; src: url("/fonts/anton-latin-400-normal.woff2") format("woff2"); }
+  @font-face { font-family: "Inter"; src: url("/fonts/inter-latin-700-normal.woff2") format("woff2"); font-weight: 700; }
+  @font-face { font-family: "Inter"; src: url("/fonts/inter-latin-800-normal.woff2") format("woff2"); font-weight: 800; }
+  html, body { margin: 0; height: 100%; background: #000; overflow: hidden; }
+  canvas { display: block; width: 100vw; height: 100vh; object-fit: contain; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<script type="module">
+// Captions reel on real footage. Reads docs/footage.json (tools/footage.py), docs/timing.json (tools/words.py)
+// and docs/captions.json (the look: every field below can be set there; change only what the user asks).
+// Stack, back to front, all under one virtual camera: room or original frame -> words behind me -> me -> captions.
+// Render at the clip's own size and rate: node engine/render.mjs projects/<name> --w <W> --h <H> --fps <fps> --sub 1
+import { spring, track } from '/engine/motion.js';
+
+const DEFAULTS = {
+  behind: [],            // words behind my head: word indices from timing.json, or { i, y (top, 0-1 of height), width (0-1) }
+  bigFont: 'Anton', bigColor: '#ffffff', bigWidth: 0.85, headOverlap: 0.6, minCover: 0.15,
+  font: 'Inter', weight: 700, size: 0.07, color: '#ffffff', shadow: 0.45,
+  accent: '#ffd23f', accentWords: [],  // one accent word a line, at most
+  maxWords: 3, safeTop: 0.15, safeBottom: 0.65, safeWidth: 0.72,  // Instagram: bottom third + right-side buttons are covered
+  push: 0.035, drift: 0.01,            // camera: push-in on every big word, slow drift
+  room: null, roomDepth: 0.6,          // "assets/room.jpg" swaps the room (needs footage.py --from 0); no relight
+};
+const get = (f) => fetch(f).then((r) => r.json());
+const [F, T, user] = await Promise.all([get('docs/footage.json'), get('docs/timing.json'), get('docs/captions.json')]);
+const S = { ...DEFAULTS, ...user }, words = T.words;
+
+const c = document.getElementById('c'), g = c.getContext('2d');
+const W = (c.width = F.width), H = (c.height = F.height);
+window.DURATION = F.frames / F.fps;
+
+const cache = new Map();
+const img = (src) => {
+  if (!cache.has(src)) {
+    const im = new Image();
+    im.src = src;
+    cache.set(src, im.decode().then(() => im));
+    if (cache.size > 12) cache.delete(cache.keys().next().value);
+  }
+  return cache.get(src);
+};
+const pad = (n) => String(n).padStart(5, '0');
+const frameAt = (t) => Math.min(F.frames - 1, Math.max(0, Math.round(t * F.fps)));
+const hasMatte = (n) => n >= F.matteFrom;
+const framePath = (n) => `assets/frames/f${pad(n)}.jpg`, mattePath = (n) => `assets/matte/f${pad(n)}.png`;
+const clean = (w) => w.replace(/[^\p{L}\p{N}'%$€£&+-]/gu, '');
+const pop = (dt, k, d) => spring(dt * F.fps / 30, k, d);  // tuned in 30 fps frames, same feel at any rate
+const bigFont = (px) => `${px}px "${S.bigFont}"`, capFont = (px) => `${S.weight} ${px}px "${S.font}"`;
+
+// ---------- layout, once ----------
+const big = S.behind.map((b) => (typeof b === 'number' ? { i: b } : b)).sort((a, b) => a.i - b.i);
+const bigSet = new Set(big.map((b) => b.i));
+const Q = 4, qc = document.createElement('canvas'), mc = document.createElement('canvas');
+qc.width = mc.width = Math.ceil(W / Q); qc.height = mc.height = Math.ceil(H / Q);
+const qg = qc.getContext('2d', { willReadFrequently: true }), mg = mc.getContext('2d', { willReadFrequently: true });
+
+async function layoutBig(b, k) {
+  const w = words[b.i], n = frameAt(w.start), text = clean(w.w).toUpperCase();
+  g.font = bigFont(100);
+  const px = 100 * (b.width ?? S.bigWidth) * W / g.measureText(text).width;
+  g.font = bigFont(px);
+  const m = g.measureText(text), asc = m.actualBoundingBoxAscent, h = asc + m.actualBoundingBoxDescent;
+  const out = { ...b, t: w.start, until: big[k + 1] ? words[big[k + 1].i].start : Infinity, text, px, asc, h, width: m.width };
+  const head = hasMatte(n) ? F.head[n - F.matteFrom] : null;
+  if (b.y != null) return { ...out, top: b.y * H };  // the user placed it: keep it there even if my head covers less
+  if (head == null) { console.warn(`no cut-out at ${w.start}s for "${text}": run footage.py --from earlier`); return { ...out, top: 0.3 * H }; }
+  // My head overlaps ~60% of the letter height, then lower until it covers >= 15% of the letters (hats, hoods).
+  mg.clearRect(0, 0, mc.width, mc.height);
+  mg.drawImage(await img(mattePath(n)), 0, 0, mc.width, mc.height);
+  const A = mg.getImageData(0, 0, mc.width, mc.height).data;
+  const cover = (top) => {
+    qg.clearRect(0, 0, qc.width, qc.height);
+    qg.font = bigFont(px / Q); qg.textAlign = 'center'; qg.fillStyle = '#fff';
+    qg.fillText(text, qc.width / 2, (top + asc) / Q);
+    const D = qg.getImageData(0, 0, qc.width, qc.height).data;
+    let all = 0, hid = 0;
+    for (let i = 3; i < D.length; i += 4) if (D[i] > 128) { all++; if (A[i] > 128) hid++; }
+    return all ? hid / all : 0;
+  };
+  let top = head * H - (1 - S.headOverlap) * h;
+  for (let s = 0; s < 40 && cover(top) < S.minCover; s++) top += 0.01 * H;
+  return { ...out, top, cover: cover(top) };
+}
+
+// Caption groups: up to maxWords, split at punctuation, pauses and big words; the big word is never captioned twice.
+const groups = [];
+{
+  let cur = [];
+  words.forEach((w, i) => {
+    const prev = words[cur[cur.length - 1]];
+    if (bigSet.has(i) || (cur.length && (cur.length >= S.maxWords || /[.,?!;:]$/.test(prev.w) || w.start - prev.end > 0.35))) {
+      if (cur.length) groups.push(cur);
+      cur = [];
+    }
+    if (!bigSet.has(i)) cur.push(i);
+  });
+  if (cur.length) groups.push(cur);
+}
+
+let BIG = [], CAPS = [];
+const activeBig = (t) => BIG.findLast((b) => t >= b.t && t < b.until);
+window.ready = (async () => {
+  await Promise.all([document.fonts.load(bigFont(100)), document.fonts.load(capFont(100))]);
+  BIG = [];
+  for (let k = 0; k < big.length; k++) BIG.push(await layoutBig(big[k], k));
+  console.log('big words', JSON.stringify(BIG.map(({ text, t, top, cover }) => ({ text, t, top: +(top / H).toFixed(3), cover }))));
+  CAPS = groups.map((ix, k) => {
+    const start = words[ix[0]].start;
+    const end = groups[k + 1] ? words[groups[k + 1][0]].start : words[ix.at(-1)].end + 0.8;
+    let px = S.size * W;
+    g.font = capFont(px);
+    const space = g.measureText(' ').width, ws = ix.map((i) => g.measureText(clean(words[i].w) || words[i].w).width);
+    let total = ws.reduce((a, b) => a + b, 0) + space * (ix.length - 1);
+    const fit = Math.min(1, S.safeWidth * W / total);
+    px *= fit; total *= fit;
+    // Above the big word on screen (or the next one), never on it, inside the safe band.
+    const b = BIG.findLast((b) => b.t <= start) ?? BIG[0];
+    const lo = S.safeTop * H + px * 0.6, hi = S.safeBottom * H - px * 0.6;
+    const y = Math.min(hi, Math.max(lo, b ? b.top - px * 0.85 : hi));
+    let x = (W - total) / 2;
+    const items = ix.map((i, j) => { const it = { i, x: x + ws[j] * fit / 2 }; x += (ws[j] + space) * fit; return it; });
+    return { start, end, px, y, items };
+  });
+  // One still per line: every caption group fully shown, every big word just landed.
+  window.STORYBOARD = [...CAPS.map((c) => words[c.items.at(-1).i].start + 0.15), ...BIG.map((b) => b.t + 0.25)]
+    .map((t) => Math.round(Math.min(t, window.DURATION - 1 / F.fps) * F.fps) / F.fps).sort((a, b) => a - b);
+})();
+
+// ---------- camera ----------
+const keys = [[0, 0], ...big.map((b, k) => [words[b.i].start, (k % 2 ? 0.45 : 1) * S.push])];
+const cam = (t) => ({
+  z: 1 + 2 * S.drift + track(t, keys, 40, 2 * Math.sqrt(40)) + 0.5 * S.push * t / window.DURATION,
+  x: S.drift * W * Math.sin(t * 0.7), y: 0.5 * S.drift * H * Math.sin(t * 0.45 + 1),
+});
+// Depth d: 1 = me; less moves less (further away), more moves more (in front).
+const layer = (cm, d, draw) => {
+  const s = 1 + (cm.z - 1) * d;
+  g.save(); g.translate(W / 2 + cm.x * d, H / 2 + cm.y * d); g.scale(s, s); g.translate(-W / 2, -H / 2);
+  draw();
+  g.restore();
+};
+const coverFit = (im) => {
+  const s = Math.max(W / im.width, H / im.height);
+  g.drawImage(im, (W - im.width * s) / 2, (H - im.height * s) / 2, im.width * s, im.height * s);
+};
+
+// ---------- frame ----------
+window.seek = async (t) => {
+  const n = frameAt(t), cm = cam(t), matted = hasMatte(n), b = activeBig(t);
+  const [frame, matte, room] = await Promise.all([
+    !S.room || !matted ? img(framePath(n)) : null,
+    matted && (b || S.room) ? img(mattePath(n)) : null,
+    S.room ? img(S.room) : null,
+  ]);
+  g.clearRect(0, 0, W, H);
+  if (room) layer(cm, S.roomDepth, () => coverFit(room));
+  if (frame) layer(cm, 1, () => g.drawImage(frame, 0, 0, W, H));
+
+  if (b) layer(cm, 0.9, () => {
+    const s = Math.min(0.8 + 0.2 * pop(t - b.t, 1180, 27), 0.98 * W / b.width);  // 80 -> 100% in 6 frames, ~5% overshoot
+    g.save();
+    g.translate(W / 2, b.top + b.h / 2); g.scale(s, s);
+    g.font = bigFont(b.px); g.textAlign = 'center'; g.fillStyle = S.bigColor;
+    g.fillText(b.text, 0, b.asc - b.h / 2);
+    g.restore();
+  });
+  if (matte && (b || room)) layer(cm, 1, () => g.drawImage(matte, 0, 0, W, H));
+
+  const cap = CAPS.find((k) => t >= k.start && t < k.end);
+  if (cap) layer(cm, 1.25, () => {
+    g.font = capFont(cap.px); g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.shadowColor = `rgba(0,0,0,${S.shadow})`; g.shadowBlur = cap.px * 0.3; g.shadowOffsetY = cap.px * 0.05;
+    for (const it of cap.items) {
+      const w = words[it.i];
+      if (t < w.start) continue;
+      const s = 0.85 + 0.15 * pop(t - w.start, 900, 60);  // critically damped: no overshoot on type
+      g.save();
+      g.translate(it.x, cap.y); g.scale(s, s);
+      g.fillStyle = S.accentWords.includes(it.i) ? S.accent : S.color;
+      g.fillText(clean(w.w) || w.w, 0, 0);
+      g.restore();
+    }
+  });
+};
+
+// Preview mode (no ?render): play in real time, or freeze at ?t=seconds to leave a note on that frame.
+const q = new URLSearchParams(location.search);
+if (!q.has('render')) {
+  const T0 = q.has('t') ? Number(q.get('t')) : null, t0 = performance.now();
+  const loop = async () => {
+    await window.seek(T0 ?? ((performance.now() - t0) / 1000) % window.DURATION);
+    if (T0 === null) requestAnimationFrame(loop);
+  };
+  window.ready.then(loop);
+}
+</script>
+</body>
+</html>

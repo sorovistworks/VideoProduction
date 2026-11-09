@@ -19,3 +19,4 @@ projects/**/*.png
 projects/**/*.jpg
 projects/**/*.raw
 projects/**/.hyperframes/
+.models/

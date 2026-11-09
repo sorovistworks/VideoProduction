@@ -3,6 +3,7 @@
 //   node engine/render.mjs projects/<name> --w 1080 --h 1920   9:16 (the page re-lays out itself)
 //   node engine/render.mjs projects/<name> --draft             30 fps, no subframes, fast
 //   node engine/render.mjs projects/<name> --stills 0.5,2,4    PNGs into out/stills/ for approval
+//   node engine/render.mjs projects/<name> --stills board      one PNG per line, from the page's window.STORYBOARD
 //   node engine/render.mjs projects/<name> --page thumb.html --w 1280 --h 720 --stills 0   YouTube thumbnail
 //   node engine/render.mjs projects/<name> --draft --from 240 --to 260                      just that range
 // Other flags: --fps --sub --dur (default: window.DURATION) --out <file> --page <file> (default index.html)
@@ -45,7 +46,9 @@ try {
 
   if (stills) {
     mkdirSync(join(outDir, 'stills'), { recursive: true });
-    for (const t of stills.split(',').map(Number)) {
+    // --stills board: one still per storyboard line, from the page's window.STORYBOARD (seconds)
+    const times = stills === 'board' ? await page.evaluate(() => window.STORYBOARD) : stills.split(',').map(Number);
+    for (const t of times) {
       await seek(t);
       const base = flag('page', 'index.html').replace(/\.html$/, '');
       const file = join(outDir, 'stills', `${base === 'index' ? '' : base + '_'}${W}x${H}_t${t.toFixed(2)}.png`);
@@ -58,9 +61,10 @@ try {
     const part = flag('from') || flag('to') ? `_${T0}-${T1}s` : '';
     const out = flag('out', join(outDir, `${draft ? 'draft' : 'silent'}_${W}x${H}${part}.mp4`));
     // Blend SUB subframes per output frame = real motion blur.
-    // JPEG frames are full-range; convert to standard TV range so players and platforms show true blacks.
+    // JPEG frames are BT.601 full range; convert to tagged BT.709 TV range so players show true blacks and colours.
     const blur = SUB > 1 ? `tmix=frames=${SUB},select='eq(mod(n\\,${SUB})\\,${SUB - 1})',setpts=N/${FPS}/TB,` : '';
-    const vf = ['-vf', `${blur}scale=out_range=tv,format=yuv420p`, '-color_range', 'tv'];
+    const vf = ['-vf', `${blur}scale=in_color_matrix=bt601:in_range=pc:out_color_matrix=bt709:out_range=tv,format=yuv420p,` +
+      'setparams=range=tv:colorspace=bt709:color_primaries=bt709:color_trc=bt709'];
     const ff = spawn('ffmpeg', ['-y', '-loglevel', 'error', '-f', 'image2pipe', '-c:v', 'mjpeg', '-framerate', String(FPS * SUB), '-i', '-',
       ...vf, '-r', String(FPS), '-c:v', 'libx264', '-crf', draft ? '23' : '16', '-preset', draft ? 'veryfast' : 'slow',
       '-pix_fmt', 'yuv420p', '-movflags', '+faststart', out], { stdio: ['pipe', 'inherit', 'inherit'] });

@@ -9,7 +9,8 @@ Shared font files any project can use. Put `.woff2` (or `.ttf`/`.otf`) files her
 Without a file here, pages fall back to Segoe UI.
 
 Free, open-licensed picks (SIL Open Font License), from fonts.google.com or the projects' own sites:
-- Inter: clean UI and product type
+- Inter: clean UI and product type (here: 400–900)
+- Anton: condensed display capitals, the word behind the head (here: `anton-latin-400-normal.woff2`)
 - Space Grotesk: techy display
 - Fraunces: storybook serif (the kids' story guides)
 

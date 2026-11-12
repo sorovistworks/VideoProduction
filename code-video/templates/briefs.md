@@ -48,3 +48,7 @@ Beat sheet: 0:00–0:02 hook [most striking image] · [acts] · a payoff every 3
 Workflow with gates: style_guide + shotlist → stills for every shot + contact sheet → low-res rough cut with placeholder audio, fix pacing → full animation → polish → sound → final render. For long films write docs/ANIMATION_GUIDE.md first, then split chapters across subagents.
 Critique loop: every shot, at least 3 rounds, scores and the 3 biggest problems logged in docs/review_log.md, until all are 8+.
 Deliverables: out/final.mp4, out/loop_check.mp4, out/poster.png, out/contact.png, README.md.
+
+## 6. Toon film (cartoon short, all code: the `toon-film` skill)
+Let's make a cartoon in code from [PUBLIC-DOMAIN TALE / my story]. Our own characters and look, nothing copied from an existing film or studio. Angle: [ONE LINE]. [3]-minute film, 16:9, 24 fps, but a sample first: a 25–30 s cold open that starts on the climax.
+Run it like a small studio (showrunner + department sub-agents + animation checkers + a blind critic), characters from signed distance functions, a painted storybook world with a colour script, a real cut list with lenses and focus, 8–64 sub-renders per frame. Score and effects in numpy on a cue sheet; voices on Higgsfield [or ElevenLabs], 2–3 takes per line, best by measured pace and clarity (quote the credits first). Review every frame before showing me anything.

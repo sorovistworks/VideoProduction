@@ -208,6 +208,70 @@ def riser(dur=2.0, seed=7):
     return fade((0.5 * highpass(noise(dur, seed), 800) + 0.3 * pitch) * env * 0.7, 0.01, 0.002)
 
 
+# ---------- film score tools (toon films): space, glue, tape, the record scratch ----------
+def reverb(x, seconds=1.6, wet=0.25, seed=21, damp=5000, predelay=0.012):
+    """Seeded noise-impulse reverb (decays 60 dB in `seconds`), dark above `damp` Hz. Returns dry/wet mix."""
+    from scipy.signal import fftconvolve
+    n = int(seconds * SR)
+    ir = lowpass(noise(seconds, seed) * np.exp(-6.9 * t_axis(seconds) / seconds), damp)
+    ir = np.concatenate([np.zeros(int(predelay * SR)), ir])
+    ir /= np.sqrt(np.sum(ir ** 2)) or 1
+    w = fftconvolve(x, ir)[:len(x) + n]
+    return np.pad(x, (0, len(w) - len(x))) * (1 - wet) + w * wet
+
+
+def compress(x, threshold_db=-18.0, ratio=3.0, attack=0.005, release=0.12, makeup_db=0.0):
+    """Feed-forward peak compressor (bus glue)."""
+    level = _follow(_peaks(x), attack, release)
+    over = np.maximum(0, 20 * np.log10(level + 1e-9) - threshold_db)
+    gain_db = -over * (1 - 1 / ratio) + makeup_db
+    g = np.interp(np.arange(len(x)) / (SR // RATE), np.arange(len(gain_db)), gain_db)
+    return x * db(g)
+
+
+def tape(x, drive=1.6, tone=14000):
+    """Tape-ish saturation: soft clip + a gentle top roll-off."""
+    return lowpass(np.tanh(drive * x) / np.tanh(drive), tone)
+
+
+def varispeed(x, speed):
+    """Play x at a time-varying speed (array per output sample, or a number). 1 = normal, 0 = stopped, <0 = backwards."""
+    sp = np.full(len(x), float(speed)) if np.isscalar(speed) else np.asarray(speed, float)
+    pos = np.clip(np.cumsum(sp) - sp[0], 0, len(x) - 1)
+    return np.interp(pos, np.arange(len(x)), x)
+
+
+def record_scratch(music, at, dur=0.32, seed=31):
+    """The world-stops gag: the MUSIC ITSELF is scratched at `at` (pulled back, then stopped). Everything after is
+    silent until you place new music. Returns a new track."""
+    out = music.copy()
+    i = int(at * SR)
+    seg = music[i:i + int(1.2 * SR)]
+    t = t_axis(len(seg) / SR)
+    speed = np.where(t < dur, 1 - 2.8 * np.sin(np.pi * np.clip(t / dur, 0, 1)), 0.0)
+    s = varispeed(seg, speed) * np.where(t < dur, 1, np.exp(-(t - dur) * 60))
+    crackle = highpass(noise(dur, seed), 3000) * decay(dur, 12) * 0.25
+    s[:len(crackle)] += crackle
+    out[i:] = 0
+    n = min(len(s), len(out) - i)
+    out[i:i + n] = s[:n]
+    return out
+
+
+def heartbeat(sec, bpm=72, start=0.0, gain=0.8):
+    """Tension pulse: lub-dub thumps. Start it before the film (start < 0) so it is already running at frame 0."""
+    x, beat = silence(sec), 60 / bpm
+    thump = lambda f, d: fade(np.sin(2 * np.pi * np.cumsum(f + 25 * np.exp(-t_axis(d) * 30)) / SR) * decay(d, 14))
+    k = 0
+    while start + k * beat < sec:
+        t = start + k * beat
+        for off, g in ((0.0, 1.0), (0.26, 0.7)):
+            if t + off >= 0:
+                place(x, thump(52, 0.3) * g * gain, t + off)
+        k += 1
+    return x
+
+
 # ---------- mixing ----------
 def load(path):
     """Any audio file -> mono float at SR."""
@@ -274,5 +338,11 @@ if __name__ == "__main__":
     assert recovered < 0.5, recovered  # back within 0.5 dB ~1.2 s after the voice stops
     assert np.array_equal(whoosh(), whoosh()) and np.array_equal(hit(), hit())
     for clip in (marimba(440), pluck(220), keys(330), kick(), snare(), hat(), whoosh(), hit(), sub_boom(), click(), chime(), riser()):
+        assert np.isfinite(clip).all() and np.max(np.abs(clip)) < 2.5
+    # film tools: deterministic, finite, the scratch silences what follows
+    m = np.sin(2 * np.pi * 220 * t_axis(3)) * 0.3
+    sc = record_scratch(m, 1.0)
+    assert np.max(np.abs(sc[int(1.8 * SR):])) < 1e-3 and np.array_equal(sc, record_scratch(m, 1.0))
+    for clip in (reverb(m), compress(m), tape(m), varispeed(m, 0.5), heartbeat(3, start=-0.5)):
         assert np.isfinite(clip).all() and np.max(np.abs(clip)) < 2.5
     print(f"sound.py ok: duck {drop:.1f} dB, all instruments finite and deterministic")

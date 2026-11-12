@@ -7,6 +7,7 @@
 //   node engine/render.mjs projects/<name> --page thumb.html --w 1280 --h 720 --stills 0   YouTube thumbnail
 //   node engine/render.mjs projects/<name> --draft --from 240 --to 260                      just that range
 // Other flags: --fps --sub --dur (default: window.DURATION) --out <file> --page <file> (default index.html)
+//   --query "silhouette&samples=4"   extra URL parameters for the page (toon films: silhouette test, debug views, samples)
 import { chromium } from 'playwright';
 import { spawn } from 'node:child_process';
 import { mkdirSync } from 'node:fs';
@@ -38,7 +39,8 @@ try {
 try {
   const page = await browser.newPage({ viewport: { width: W, height: H }, deviceScaleFactor: 1 });
   page.on('pageerror', (e) => console.error('page error:', e.message));
-  await page.goto(`http://127.0.0.1:${port}/${urlPath}/${flag('page', 'index.html')}?render`);
+  const extra = flag('query') ? '&' + flag('query') : '';
+  await page.goto(`http://127.0.0.1:${port}/${urlPath}/${flag('page', 'index.html')}?render${extra}`);
   await page.waitForFunction(() => typeof window.seek === 'function');
   await page.evaluate(async () => { await document.fonts.ready; await window.ready; });
   const DUR = Number(flag('dur', await page.evaluate(() => window.DURATION ?? 10)));
@@ -51,7 +53,8 @@ try {
     for (const t of times) {
       await seek(t);
       const base = flag('page', 'index.html').replace(/\.html$/, '');
-      const file = join(outDir, 'stills', `${base === 'index' ? '' : base + '_'}${W}x${H}_t${t.toFixed(2)}.png`);
+      const tag = flag('query') ? '_' + flag('query').replace(/[^a-z0-9=]+/gi, '-') : '';
+      const file = join(outDir, 'stills', `${base === 'index' ? '' : base + '_'}${W}x${H}_t${t.toFixed(2).padStart(6, '0')}${tag}.png`);
       await page.screenshot({ path: file });
       console.log(file);
     }

@@ -1,0 +1,80 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>toon-film</title>
+<!-- INTEGRATOR owns this file: imports every department's module, poses the world per sub-render, mounts the film.
+     URL flags: ?render (driver), ?t=4.2 (scrub), ?samples=1 or ?draft (fast), ?silhouette (silhouette test). -->
+<style>
+  html, body { margin: 0; height: 100%; background: #000; overflow: hidden; }
+  canvas { display: block; width: 100vw; height: 100vh; }
+</style>
+<script type="importmap">
+  { "imports": { "three": "/node_modules/three/build/three.module.js", "three/addons/": "/node_modules/three/examples/jsm/" } }
+</script>
+</head>
+<body>
+<canvas id="c"></canvas>
+<script type="module">
+import * as THREE from 'three';
+import { Film, mount } from '/engine/toon/film.js';
+import { createLook, inkHook, TOON } from '/engine/toon/shade.js';
+import { loadLipsync } from '/engine/toon/lipsync.js';
+import { cut, DURATION, FREEZE } from './film/cutlist.js';
+import { paletteFor } from './film/colorscript.js';
+import { buildMeadow, GUST_AT } from './film/sets/meadow.js';
+import { createNib, NIB_HEIGHT } from './film/cast/nib.js';
+import { nibPose } from './film/scenes/cold-open.js';
+
+const q = new URLSearchParams(location.search);
+if (q.has('silhouette')) TOON.uniforms.silhouette.value = 1;
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(35, innerWidth / innerHeight, 0.05, 900);
+const look = createLook(scene, { shadowSize: 14 });
+const set = buildMeadow(scene);
+const nib = createNib();
+scene.add(nib.root);
+// silhouette test: unlit pieces too (eye shines black, windows and lamps white, glows off)
+if (q.has('silhouette')) scene.traverse((o) => {
+  if (o.isSprite) o.visible = false;
+  else if (o.material?.isMeshBasicMaterial) o.material = new THREE.MeshBasicMaterial({ color: nib.root.getObjectById(o.id) ? 0x000000 : 0xffffff, fog: false });
+});
+// debug views: ?debug=normals (shape), ?debug=albedo (paint + ink, no light)
+if (q.get('debug') === 'normals') scene.overrideMaterial = new THREE.MeshNormalMaterial();
+if (q.get('debug') === 'albedo') scene.overrideMaterial = new THREE.MeshBasicMaterial({ vertexColors: true });
+const lips = await loadLipsync('docs/lipsync.json');
+let meshPose = null, screenPx = 300;
+
+const film = new Film({
+  canvas: document.getElementById('c'), cut, scene, camera,
+  // one sub-render: world time w, film time ctx.t (this sample), ctx.frameT (the frame)
+  update(w, ctx) {
+    const pal = paletteFor(ctx.frameT);
+    set.update(w);
+    const p = nibPose(w);
+    // the voice drives the mouth while a line plays (docs/lipsync.json); the animator's pose otherwise
+    const r = p.root, y = set.groundY(r.x, r.z) + r.lift;
+    nib.root.position.set(r.x, y, r.z);
+    nib.root.rotation.y = r.yaw;
+    // The SDF body meshes once per frame (pose at the frame's world time, cached); eyes, lids and root move per
+    // sample, so motion blur still sees them move. Mesh detail follows the on-screen size (close-ups get finer).
+    if (ctx.i === 0) {
+      meshPose = nibPose(ctx.shot.world(ctx.frameT)).mesh;
+      if (lips.speaking('nib', ctx.frameT)) Object.assign(meshPose, lips.mouth('nib', ctx.frameT));
+      screenPx = film.screenHeight(ctx.cam, [r.x, y + 0.55, r.z], NIB_HEIGHT / 2);
+    }
+    nib.pose(meshPose, p.live, { screenPx });
+    look.apply(pal, [r.x, 0, r.z]);
+  },
+  grade: (t) => paletteFor(t).grade,
+});
+film.onCamera = (cam, pxToWorld) => { inkHook(cam, pxToWorld); look.sky.position.copy(cam.position); };
+mount(film, { duration: DURATION });
+window.STORYBOARD = cut.shots.map((s) => +((s.start + s.end) / 2).toFixed(2));
+// Named story events in FILM seconds -> docs/cutlist.json (render-film --meta) -> audio/score.py places hits on them.
+window.EVENTS = { inhale: 1.55, sneeze: GUST_AT, scratch: FREEZE, flyStart: 5.0, arrive: 7.5 };
+window.stats = () => ({ ...nib.sdf.stats });
+</script>
+</body>
+</html>

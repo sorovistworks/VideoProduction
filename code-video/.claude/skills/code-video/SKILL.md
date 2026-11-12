@@ -14,7 +14,7 @@ Collect what is missing, in one message:
 - A reference: a frame, a video, or a folder of images. If none, ask once; it is the biggest quality lever.
 - Voice: script or "write it"; voice style. Music: licensed file or "synthesize".
 - Signature / call to action for the end card.
-Pick the template from `templates/briefs.md` and the route from CLAUDE.md "Routes".
+Pick the template from `templates/briefs.md` and the route from CLAUDE.md "Routes". A cartoon short film (characters, painted world, real camera) follows the `toon-film` skill instead of the steps below.
 
 ## 2. Research, script, shot list
 `projects/<kebab-name>/` from `templates/starter/` (2D) or `templates/starter-3d/` (three.js): copy `index.html`, plus `assets/ audio/ docs/`. For Blender, Remotion, HyperFrames or Manim shots, follow that route in CLAUDE.md and composite the frames in.

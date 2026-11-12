@@ -2,12 +2,13 @@
 
 Every video here is rendered from code. A model writes the scene; this machine draws every frame; ffmpeg encodes. No per-render fees, no AI video generation unless a shot truly needs a real face (then see Routes).
 
-**Run every command from `code-video/`** (this folder is its own npm + uv project). Start a new video with the `code-video` skill (`.claude/skills/code-video/SKILL.md`); a captions reel on the user's own clip with the `captions-reel` skill.
+**Run every command from `code-video/`** (this folder is its own npm + uv project). Start a new video with the `code-video` skill (`.claude/skills/code-video/SKILL.md`); a captions reel on the user's own clip with the `captions-reel` skill; a cartoon short film (3D characters, painted world, a real camera) with the `toon-film` skill.
 
 ## Layout
 - `engine/` shared renderer, preview server, motion library. Do not copy these into projects.
+- `engine/toon/` the cartoon kit (cut list, sub-sample film renderer, SDF characters, painted toon shading, cached sims, lip sync, props) and `engine/render-film.mjs` (chunked, verified production render). See the `toon-film` skill.
 - `tools/` beats, word timings, captions, sound library, mastering, review sheets, motion audit, script diff.
-- `templates/starter/` 2D canvas seed; `templates/starter-3d/` three.js seed (shadows, true brand colour, DOM type over WebGL). `templates/briefs.md` prompt templates.
+- `templates/starter/` 2D canvas seed; `templates/starter-3d/` three.js seed (shadows, true brand colour, DOM type over WebGL); `templates/toon-film/` a working cartoon cold open split by department (cast, sets, scenes, cut list, colour script, score). `templates/briefs.md` prompt templates.
 - `projects/<name>/` one folder per video: `index.html`, `assets/`, `audio/score.py`, `docs/`, `out/`.
 - `refs/<genre>/` the user's reference clips and images, one folder per genre, each with a reusable `STYLE.md` (see `refs/README.md`). Take the grammar, never the content. `fonts/` shared fonts, loaded as `url("/fonts/<file>.woff2")`.
 
@@ -42,6 +43,9 @@ Every video here is rendered from code. A model writes the scene; this machine d
 - Mux + master every rendered format: `node tools/finish.mjs projects/<name>` → `out/final_*.mp4` at −14 LUFS / −1 dBTP, measured and printed (exits 1 if off target).
 - ffmpeg gotcha: `-framerate` goes BEFORE `-i`, or it assumes 25 fps.
 - Render speed (measured): 5 s draft ≈ 8 s; 5 s final (60 fps × 4 subframes) ≈ 80 s, per format. 3D draft ≈ 9 s.
+- Toon films (24 fps, sub-renders inside the page): `node engine/render-film.mjs projects/<name> [--draft | --samples N] [--workers 2] [--from s --to s --redo] [--chunks a-b] [--assemble] [--meta]` → `out/draft_*.mp4` / `out/silent_*.mp4`, every frame checked, chunks lossless, frame counts verified. Measured on this laptop (AMD Radeon iGPU, 2 workers): the 11.5 s template sample takes ≈ 3.7 min final (8–24 sub-renders/frame), ≈ 1.5 frames/s draft; SDF character meshing is 0.35–1.4 s per new pose. Stills take page flags: `--query "samples=1"`, `--query silhouette`, `--query debug=normals|albedo`.
+- Animation review: `uv run tools/anim_review.py <film.mp4> [--shots s03,s04] [--at 6.2 --crop x,y,w,h]` → 12 fps sheets with frame numbers per shot, first frames after every cut, contact close-ups, `pops.txt`.
+- Lip sync: `uv run tools/lipsync.py projects/<name>/docs/voices.json -o projects/<name>/docs/lipsync.json` · voice takes: `uv run tools/takes.py "<line>" <takes…>` · cue check: `uv run tools/cues.py <sfx.wav> <docs/cues.json>`.
 
 ## Look
 - Banned: centered title on a gradient, everything fading in, corner labels and frame borders, glow on UI or logos, generic particle bursts, strobe montages, flare to white, RGB-split glitch, ring pulses, dolly zoom, karaoke captions on every word.
@@ -80,6 +84,7 @@ Every video here is rendered from code. A model writes the scene; this machine d
 ## Routes (pick by the video, not by habit)
 - Motion graphics, kinetic type, product/UI ads, explainers → this engine (canvas/DOM/SVG/three.js page + `seek(t)`).
 - 3D scene with motion graphics (maquettes, cards, UI in space) → `templates/starter-3d/` (three.js through this engine).
+- Cartoon short film / animated fairy tale with characters, a painted world and real cinematography → the `toon-film` skill (`engine/toon/`, `templates/toon-film/`, style in `refs/toon-film/STYLE.md`). Voices on Higgsfield or ElevenLabs; everything else in code.
 - Many videos from one template → Remotion (`npx skills add remotion-dev/skills`), in its own folder under `code-video/`.
 - The user's own talking clip with captions (a word behind the head, captions in front, depth) → the `captions-reel` skill: `tools/footage.py` + `templates/footage/` through this engine. Style lives in `refs/captions/STYLE.md`. Its captions are not the banned karaoke: up to 3 words that pop on, no highlight sweep.
 - Fast captioned verticals → HyperFrames (`npx hyperframes init`), in its own folder under `code-video/`.
